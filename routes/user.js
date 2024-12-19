@@ -30,26 +30,17 @@ router.post('/signup', async (req, res) => {
 });
 
 router.post('/signin', async (req, res) => {
-    console.log('Hi from signin');
     
     const { email, password } = req.body;
+    try {
+        const token = await User.matchPasswordAndGenerateToken(email, password)
+        console.log('Token : ',token)
 
-    const user = await User.findOne({ email });
-
-    if (!user) {
-        return res.status(400).send('invalid email or password!');
-    }
-
-    const hashedPassword = createHmac('sha256', user.salt) 
-                .update(password)
-                .digest('hex');
-
-    if (user.password === hashedPassword) {
-        console.log('User:', user);
-        
-        return res.redirect('/');
-    } else {
-        return res.status(400).send('Mật khẩu không chính xác');
+        return res.cookie('token', token).redirect('/')
+    } catch(e ){
+        return res.render('signin', {
+            error : 'Incorrect email or password !'
+        })
     }
 });
 
